@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+
+  @@map("sw_admins")
+}
+
+model Booking {
+  id              String   @id @default(uuid())
+  trackingCode    String   @unique
+  status          String   @default("confirmed")
+
+  passengerTitle  String   @default("Mr")
+  firstName       String
+  lastName        String
+  email           String
+  phone           String
+  passportNumber  String?
+  nationality     String?
+
+  fromCity        String
+  fromCode        String
+  fromAirport     String
+  toCity          String
+  toCode          String
+  toAirport       String
+  departureDate   DateTime
+  departureTime   String
+  arrivalDate     DateTime
+  arrivalTime     String
+  flightNumber    String
+  airline         String
+  duration        String
+  cabinClass      String   @default("Economy")
+  stops           String   @default("Direct")
+
+  adults          Int      @default(1)
+  children        Int      @default(0)
+  infants         Int      @default(0)
+
+  personalItem    String   @default("1 personal item (40x30x15cm)")
+  carryOn         String   @default("1 carry-on bag (55x40x20cm, max 10kg)")
+  checkedBaggage  String   @default("No free checked baggage")
+
+  ticketFare      Decimal  @db.Decimal(10, 2)
+  taxesFees       Decimal  @db.Decimal(10, 2)
+  totalAmount     Decimal  @db.Decimal(10, 2)
+  currency        String   @default("USD")
+  promoCode       String?
+  promoDiscount   Decimal  @default(0) @db.Decimal(10, 2)
+
+  specialRequests String?  @db.Text
+  mealPreference  String?
+  seatPreference  String?
+
+  bookedBy        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("sw_bookings")
+}
