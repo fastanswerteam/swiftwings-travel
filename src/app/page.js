@@ -10,6 +10,7 @@ import {
   Globe, MessageCircle, Send, Apple, PlayCircle
 } from 'lucide-react';
 import SiteSidebar from '@/components/SiteSidebar';
+import AppDownloadPopup from '@/components/AppDownloadPopup';
 
 const SUPPORT_EMAIL = ['support', 'swiftairline.com'].join('@');
 const SUPPORT_LINK = 'mailto:' + SUPPORT_EMAIL;
@@ -850,6 +851,7 @@ export default function Home() {
         </footer>
 
       </div>
+      <AppDownloadPopup />
     </div>
   );
 }

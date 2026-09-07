@@ -1,9 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plane, Clock, MapPin, Loader2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { Search, Plane, Clock, MapPin, Loader2, ArrowRight } from 'lucide-react';
 import SiteSidebar from '@/components/SiteSidebar';
 import AppDownloadPopup from '@/components/AppDownloadPopup';
+
+const RouteMap = dynamic(() => import('@/components/RouteMap'), { ssr: false });
 
 const statusStyles = {
   scheduled: { label: 'Scheduled', bg: '#EFF6FF', color: '#2B5CE6' },
@@ -16,19 +19,25 @@ const statusStyles = {
 
 function formatTime(iso) {
   if (!iso) return '--:--';
-  const d = new Date(iso);
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-function formatDate(iso) {
-  if (!iso) return '';
-  return new Date(iso).toDateString();
+function formatDateLabel(offset) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function toDateParam(offset) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.toISOString().split('T')[0];
 }
 
 function getDuration(dep, arr) {
-  if (!dep || !arr) return '—';
+  if (!dep || !arr) return null;
   const diffMs = new Date(arr) - new Date(dep);
-  if (isNaN(diffMs) || diffMs <= 0) return '—';
+  if (isNaN(diffMs) || diffMs <= 0) return null;
   const h = Math.floor(diffMs / 3600000);
   const m = Math.round((diffMs % 3600000) / 60000);
   return `${h}h ${m}m`;
@@ -37,25 +46,43 @@ function getDuration(dep, arr) {
 export default function FlightStatusPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [flightNumber, setFlightNumber] = useState('');
+  const [searchedFlight, setSearchedFlight] = useState('');
+  const [dayOffset, setDayOffset] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [flight, setFlight] = useState(null);
+  const [coords, setCoords] = useState(null);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!flightNumber.trim()) {
+  const runSearch = async (flightNo, offset) => {
+    if (!flightNo.trim()) {
       setError('Enter a flight number to search');
       return;
     }
+
+    if (offset !== 0) {
+      setFlight(null);
+      setError('Historical and future flight data requires a premium plan on our data provider. Showing live data is only available for today — check back on the day of travel for the most accurate status.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setFlight(null);
+    setCoords(null);
 
     try {
-      const res = await fetch(`/api/flight-status?flight=${encodeURIComponent(flightNumber.trim())}`);
+      const res = await fetch(`/api/flight-status?flight=${encodeURIComponent(flightNo.trim())}`);
       const json = await res.json();
       if (res.ok) {
         setFlight(json.data);
+        const depIata = json.data.departure?.iata;
+        const arrIata = json.data.arrival?.iata;
+        if (depIata && arrIata) {
+          fetch(`/api/airport-coords?dep=${depIata}&arr=${arrIata}`)
+            .then((r) => r.json())
+            .then((c) => { if (c.success) setCoords(c); })
+            .catch(() => {});
+        }
       } else {
         setError(json.message || 'Flight not found');
       }
@@ -66,7 +93,45 @@ export default function FlightStatusPage() {
     }
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearchedFlight(flightNumber);
+    setDayOffset(0);
+    runSearch(flightNumber, 0);
+  };
+
+  const handleDayChange = (offset) => {
+    setDayOffset(offset);
+    if (searchedFlight) runSearch(searchedFlight, offset);
+  };
+
   const status = flight ? (statusStyles[flight.flight_status] || statusStyles.scheduled) : null;
+  const duration = flight ? getDuration(flight.departure?.scheduled, flight.arrival?.scheduled) : null;
+  const depCode = flight?.departure?.iata || '---';
+  const arrCode = flight?.arrival?.iata || '---';
+  const depCity = flight?.departure?.airport || 'the departure city';
+  const arrCity = flight?.arrival?.airport || 'the arrival city';
+  const airlineName = flight?.airline?.name || 'the airline';
+  const flightCode = flight?.flight?.iata || searchedFlight.toUpperCase();
+
+  const faqs = flight ? [
+    {
+      q: `What is the current status of flight ${flightCode}?`,
+      a: `Flight ${flightCode} is currently ${status.label.toLowerCase()}. Scheduled departure is ${formatTime(flight.departure?.scheduled)} from ${depCode}, arriving ${formatTime(flight.arrival?.scheduled)} at ${arrCode}.`,
+    },
+    {
+      q: `What route does flight ${flightCode} fly?`,
+      a: `Flight ${flightCode} is operated by ${airlineName} from ${depCity} (${depCode}) to ${arrCity} (${arrCode}).${duration ? ` Typical flight time is about ${duration}.` : ''}`,
+    },
+    {
+      q: `What gate does flight ${flightCode} depart from?`,
+      a: flight.departure?.gate
+        ? `Flight ${flightCode} is scheduled to depart from gate ${flight.departure.gate}${flight.departure?.terminal ? `, terminal ${flight.departure.terminal}` : ''}. Always confirm with airport screens before heading to your gate.`
+        : `Gate information for flight ${flightCode} has not been published yet. Check airport screens closer to departure.`,
+    },
+  ] : [];
+
+  const inputClass = "px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500";
 
   return (
     <div className="flex bg-white min-h-screen">
@@ -85,7 +150,7 @@ export default function FlightStatusPage() {
                 value={flightNumber}
                 onChange={(e) => setFlightNumber(e.target.value)}
                 placeholder="e.g. LH4147"
-                className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`flex-1 ${inputClass}`}
               />
               <button
                 type="submit"
@@ -104,8 +169,39 @@ export default function FlightStatusPage() {
         </div>
 
         <div className="max-w-3xl mx-auto px-4 -mt-6 pb-16">
+
+          {searchedFlight && (
+            <div className="bg-white rounded-2xl shadow-lg p-2 flex mb-4 gap-2">
+              {[-1, 0, 1].map((offset) => (
+                <button
+                  key={offset}
+                  onClick={() => handleDayChange(offset)}
+                  className="flex-1 py-2 rounded-xl text-sm font-semibold transition-colors"
+                  style={dayOffset === offset
+                    ? { backgroundColor: '#2B5CE6', color: '#FFFFFF' }
+                    : { backgroundColor: 'transparent', color: '#6B7280' }}
+                >
+                  {offset === 0 ? 'Today' : offset === -1 ? 'Yesterday' : 'Tomorrow'}
+                  <br />
+                  <span className="text-xs font-normal opacity-80">{formatDateLabel(offset)}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           <AnimatePresence mode="wait">
-            {error && (
+            {loading && (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white rounded-2xl shadow-lg p-12 text-center"
+              >
+                <Loader2 size={28} className="animate-spin mx-auto text-blue-600" />
+              </motion.div>
+            )}
+
+            {!loading && error && (
               <motion.div
                 key="error"
                 initial={{ opacity: 0, y: 10 }}
@@ -118,81 +214,106 @@ export default function FlightStatusPage() {
               </motion.div>
             )}
 
-            {flight && (
+            {!loading && flight && (
               <motion.div
                 key="result"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden"
+                className="space-y-4"
               >
-                <div className="p-6 flex items-center justify-between border-b border-gray-100">
-                  <div>
-                    <p className="text-xs text-gray-500">{flight.airline?.name || 'Unknown Airline'}</p>
-                    <p className="text-2xl font-bold text-gray-900">{flight.flight?.iata || flightNumber.toUpperCase()}</p>
+                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                  <div className="p-6 border-b border-gray-100">
+                    <p className="text-xs text-gray-500 mb-1">{airlineName}</p>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-3">{flightCode} Flight Status</h2>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      Based on real-time data, flight {flightCode} operated by {airlineName} is scheduled to fly
+                      from {depCity} ({depCode}) to {arrCity} ({arrCode}). The flight is expected to depart at{' '}
+                      {formatTime(flight.departure?.scheduled)} and land at {formatTime(flight.arrival?.scheduled)}.
+                    </p>
                   </div>
-                  <span
-                    className="px-4 py-1.5 rounded-full text-sm font-bold"
-                    style={{ backgroundColor: status.bg, color: status.color }}
-                  >
-                    {status.label}
-                  </span>
-                </div>
 
-                <div className="p-6 border-b border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div className="text-center flex-1">
-                      <p className="text-2xl font-bold text-gray-900">{formatTime(flight.departure?.scheduled)}</p>
-                      <p className="text-lg font-bold" style={{ color: '#2B5CE6' }}>{flight.departure?.iata || '---'}</p>
-                      <p className="text-xs text-gray-500 mt-1">{flight.departure?.airport || 'Unknown Airport'}</p>
-                    </div>
-                    <div className="flex-1 text-center px-4">
-                      <p className="text-xs text-gray-400 mb-1">
-                        {getDuration(flight.departure?.scheduled, flight.arrival?.scheduled)}
-                      </p>
-                      <div className="flex items-center gap-1">
-                        <div className="flex-1 h-px bg-gray-300" />
-                        <Plane size={14} style={{ color: '#2B5CE6' }} />
-                        <div className="flex-1 h-px bg-gray-300" />
+                  <div className="p-6 flex items-center justify-between border-b border-gray-100">
+                    <span className="text-sm font-semibold text-gray-500">Flight Status</span>
+                    <span className="px-4 py-1.5 rounded-full text-sm font-bold" style={{ backgroundColor: status.bg, color: status.color }}>
+                      {status.label}
+                    </span>
+                  </div>
+
+                  <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div className="text-center flex-1">
+                        <p className="text-2xl font-bold text-gray-900">{formatTime(flight.departure?.scheduled)}</p>
+                        <p className="text-lg font-bold" style={{ color: '#2B5CE6' }}>{depCode}</p>
+                        <p className="text-xs text-gray-500 mt-1">{depCity}</p>
+                      </div>
+                      <div className="flex-1 text-center px-4">
+                        {duration && <p className="text-xs text-gray-400 mb-1">{duration}</p>}
+                        <div className="flex items-center gap-1">
+                          <div className="flex-1 h-px bg-gray-300" />
+                          <Plane size={14} style={{ color: '#2B5CE6' }} />
+                          <div className="flex-1 h-px bg-gray-300" />
+                        </div>
+                      </div>
+                      <div className="text-center flex-1">
+                        <p className="text-2xl font-bold text-gray-900">{formatTime(flight.arrival?.scheduled)}</p>
+                        <p className="text-lg font-bold" style={{ color: '#2B5CE6' }}>{arrCode}</p>
+                        <p className="text-xs text-gray-500 mt-1">{arrCity}</p>
                       </div>
                     </div>
-                    <div className="text-center flex-1">
-                      <p className="text-2xl font-bold text-gray-900">{formatTime(flight.arrival?.scheduled)}</p>
-                      <p className="text-lg font-bold" style={{ color: '#2B5CE6' }}>{flight.arrival?.iata || '---'}</p>
-                      <p className="text-xs text-gray-500 mt-1">{flight.arrival?.airport || 'Unknown Airport'}</p>
+                  </div>
+
+                  <div className="p-6 grid grid-cols-2 gap-5 bg-gray-50">
+                    <div>
+                      <p className="text-xs text-gray-400 flex items-center gap-1"><Clock size={13} /> Terminal</p>
+                      <p className="text-sm font-semibold text-gray-800 mt-1">{flight.departure?.terminal || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 flex items-center gap-1"><MapPin size={13} /> Boarding Gate</p>
+                      <p className="text-sm font-semibold text-gray-800 mt-1">{flight.departure?.gate || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Arrival Gate</p>
+                      <p className="text-sm font-semibold text-gray-800 mt-1">{flight.arrival?.gate || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Baggage Claim</p>
+                      <p className="text-sm font-semibold text-gray-800 mt-1">{flight.arrival?.baggage || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Departure Delay</p>
+                      <p className="text-sm font-semibold text-gray-800 mt-1">
+                        {flight.departure?.delay ? `${flight.departure.delay} min` : 'On time'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Aircraft Registration</p>
+                      <p className="text-sm font-semibold text-gray-800 mt-1">{flight.aircraft?.registration || 'Not available'}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-6 grid grid-cols-2 gap-4 bg-gray-50">
-                  <div className="flex items-center gap-2">
-                    <Clock size={16} className="text-gray-400" />
-                    <div>
-                      <p className="text-xs text-gray-400">Flight Date</p>
-                      <p className="text-sm font-semibold text-gray-800">{formatDate(flight.flight_date)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin size={16} className="text-gray-400" />
-                    <div>
-                      <p className="text-xs text-gray-400">Terminal / Gate</p>
-                      <p className="text-sm font-semibold text-gray-800">
-                        {flight.departure?.terminal || '—'} / {flight.departure?.gate || '—'}
-                      </p>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400">Aircraft</p>
-                    <p className="text-sm font-semibold text-gray-800">
-                      {flight.aircraft?.registration || 'Not available'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400">Delay</p>
-                    <p className="text-sm font-semibold text-gray-800">
-                      {flight.departure?.delay ? `${flight.departure.delay} min` : 'On time'}
-                    </p>
+                {coords && (coords.departure || coords.arrival) && (
+                  <RouteMap departure={coords.departure} arrival={coords.arrival} />
+                )}
+
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <h3 className="font-bold text-gray-900 mb-4">Frequently Asked Questions</h3>
+                  <div className="space-y-4">
+                    {faqs.map((f) => (
+                      <div key={f.q} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                        <p className="text-sm font-semibold text-gray-800 mb-1">{f.q}</p>
+                        <p className="text-sm text-gray-500 leading-relaxed">{f.a}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
+
+                <a
+                  href="/"
+                  className="flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors py-2"
+                >
+                  Search flights on SwiftAirline <ArrowRight size={14} />
+                </a>
               </motion.div>
             )}
           </AnimatePresence>
