@@ -770,10 +770,10 @@ export default function Home() {
               </div>
               <div className="flex flex-wrap justify-center md:justify-start gap-3">
                 <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-lg text-sm">
-                  <Apple size={18} /> iOS — Coming Soon
+                  <Apple size={18} /> iOS App
                 </div>
                 <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-lg text-sm">
-                  <PlayCircle size={18} /> Android — Coming Soon
+                  <PlayCircle size={18} /> Android App
                 </div>
               </div>
             </div>
