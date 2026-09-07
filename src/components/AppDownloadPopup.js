@@ -33,10 +33,10 @@ export default function AppDownloadPopup() {
           </p>
           <div className="flex gap-2">
             <div className="flex-1 flex items-center justify-center gap-1 bg-gray-900 text-white text-xs font-medium py-2 rounded-lg">
-              <Apple size={14} /> iOS Soon
+              <Apple size={14} /> iOS App
             </div>
             <div className="flex-1 flex items-center justify-center gap-1 bg-gray-900 text-white text-xs font-medium py-2 rounded-lg">
-              <PlayCircle size={14} /> Android Soon
+              <PlayCircle size={14} /> Android App
             </div>
           </div>
         </motion.div>

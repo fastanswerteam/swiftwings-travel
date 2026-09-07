@@ -423,7 +423,7 @@ export default function Home() {
                   )}
                 </button>
 
-                <a href="/flights/status" className="block text-center text-sm text-gray-500 hover:text-blue-600 transition-colors">
+                <a href="/flights/status" className="block text-center text-base font-bold text-gray-700 hover:text-blue-600 transition-colors">
                   Already flying? Track live flight status →
                 </a>
               </form>
