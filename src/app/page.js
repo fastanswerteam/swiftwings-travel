@@ -283,8 +283,8 @@ export default function Home() {
           </svg>
 
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 24 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.6 }}
             className="relative max-w-4xl mx-auto px-6 pt-28 pb-6 text-center"
           >
@@ -297,8 +297,8 @@ export default function Home() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 40, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
+            initial={{ y: 40, scale: 0.96 }}
+            animate={{ y: 0, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.15 }}
             className="relative max-w-4xl mx-auto px-6 pb-12 pt-6"
           >
@@ -356,6 +356,7 @@ export default function Home() {
                     type="button"
                     onClick={swapCities}
                     whileTap={{ rotate: 180 }}
+                    aria-label="Swap departure and destination"
                     className="flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-300 mx-auto sm:mx-0 self-center transition-colors"
                   >
                     <ArrowLeftRight size={16} />
@@ -392,11 +393,13 @@ export default function Home() {
                       min="1"
                       value={passengers}
                       onChange={(e) => setPassengers(e.target.value)}
+                      aria-label="Number of passengers"
                       className={`w-1/2 ${inputClass}`}
                     />
                     <select
                       value={cabinClass}
                       onChange={(e) => setCabinClass(e.target.value)}
+                      aria-label="Cabin class"
                       className={`w-1/2 ${inputClass}`}
                     >
                       <option>Economy</option>
@@ -524,6 +527,7 @@ export default function Home() {
                   alt={b.title}
                   fill
                   sizes="(max-width: 640px) 90vw, 560px"
+                  quality={65}
                   className="object-cover"
                 />
                 <div className="absolute inset-0" style={{ background: b.overlay }} />
@@ -580,6 +584,7 @@ export default function Home() {
                       alt={d.name}
                       fill
                       sizes="(max-width: 640px) 176px, 224px"
+                      quality={65}
                       className="object-cover"
                     />
                     <div className="absolute inset-0" style={{ background: 'linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.6))' }} />
@@ -594,12 +599,14 @@ export default function Home() {
               </div>
               <button
                 onClick={() => scrollRow(destRowRef, -1)}
+                aria-label="Scroll destinations left"
                 className="flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white shadow-md items-center justify-center text-gray-600 hover:text-blue-600 z-10"
               >
                 ‹
               </button>
               <button
                 onClick={() => scrollRow(destRowRef, 1)}
+                aria-label="Scroll destinations right"
                 className="flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white shadow-md items-center justify-center text-gray-600 hover:text-blue-600 z-10"
               >
                 ›
@@ -632,6 +639,7 @@ export default function Home() {
                         alt={s.name}
                         fill
                         sizes="(max-width: 640px) 240px, 288px"
+                        quality={65}
                         className="object-cover"
                       />
                     </div>
@@ -647,12 +655,14 @@ export default function Home() {
               </motion.div>
               <button
                 onClick={() => scrollRow(sightsRowRef, -1)}
+                aria-label="Scroll sights left"
                 className="flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white shadow-md items-center justify-center text-gray-600 hover:text-blue-600 z-10"
               >
                 ‹
               </button>
               <button
                 onClick={() => scrollRow(sightsRowRef, 1)}
+                aria-label="Scroll sights right"
                 className="flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white shadow-md items-center justify-center text-gray-600 hover:text-blue-600 z-10"
               >
                 ›
@@ -688,6 +698,7 @@ export default function Home() {
                     alt={it.title}
                     fill
                     sizes="(max-width: 1024px) 45vw, 270px"
+                    quality={65}
                     className="object-cover"
                   />
                   <div className="absolute inset-0" style={{ background: it.overlay }} />
@@ -729,6 +740,7 @@ export default function Home() {
                     alt={`${r.fromCity} to ${r.toCity}`}
                     fill
                     sizes="(max-width: 1024px) 45vw, 370px"
+                    quality={65}
                     className="object-cover"
                   />
                   <div className="absolute inset-0" style={{ background: r.overlay }} />
@@ -849,13 +861,13 @@ export default function Home() {
             <div>
               <h4 className="text-white font-bold mb-3">Follow Us</h4>
               <div className="flex gap-3">
-                <a href="/" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors">
+                <a href="/" aria-label="Visit SwiftAirline website" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors">
                   <Globe size={16} />
                 </a>
-                <a href="/" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors">
+                <a href="/" aria-label="Message SwiftAirline" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors">
                   <MessageCircle size={16} />
                 </a>
-                <a href="/" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors">
+                <a href="/" aria-label="Send feedback to SwiftAirline" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors">
                   <Send size={16} />
                 </a>
               </div>

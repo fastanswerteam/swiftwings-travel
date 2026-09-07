@@ -37,6 +37,7 @@ export default function SiteSidebar({ open, onToggle }) {
     >
       <button
         onClick={onToggle}
+        aria-label={open ? 'Collapse menu' : 'Expand menu'}
         className="flex items-center gap-3 px-5 py-3 text-gray-500 hover:text-gray-900 transition-colors"
       >
         <Menu size={20} />
