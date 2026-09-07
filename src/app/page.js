@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import QRCode from 'qrcode';
+import Image from 'next/image';
 import {
   Building2, Plane, TrainFront, Car, Compass, Layers,
   ArrowLeftRight, Loader2, Search, Headphones, Users, UsersRound,
@@ -10,7 +11,6 @@ import {
   Globe, MessageCircle, Send, Apple, PlayCircle
 } from 'lucide-react';
 import SiteSidebar from '@/components/SiteSidebar';
-import AppDownloadPopup from '@/components/AppDownloadPopup';
 
 const SUPPORT_EMAIL = ['support', 'swiftairline.com'].join('@');
 const SUPPORT_LINK = 'mailto:' + SUPPORT_EMAIL;
@@ -516,30 +516,34 @@ export default function Home() {
                 variants={gridItem}
                 whileHover={{ scale: 1.02, y: -4 }}
                 onClick={() => router.push('/')}
-                className="cursor-pointer rounded-2xl text-white relative overflow-hidden hover:shadow-2xl transition-shadow flex flex-col justify-between"
-                style={{
-                  backgroundImage: `${b.overlay}, url(${b.image})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  minHeight: '240px',
-                  padding: '28px',
-                }}
+                className="cursor-pointer rounded-2xl text-white relative overflow-hidden hover:shadow-2xl transition-shadow"
+                style={{ minHeight: '240px' }}
               >
-                <div className="flex items-start justify-between">
-                  <p className="text-xs font-bold opacity-80">SwiftAirline</p>
-                  <span className="text-[10px] font-bold px-2 py-1 rounded-full" style={{ backgroundColor: '#FFD700', color: '#111827' }}>
-                    {b.badge}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-2xl sm:text-3xl font-bold mb-2 leading-tight">{b.title}</h3>
-                  <p className="text-sm opacity-90 mb-4">{b.subtitle}</p>
-                  <span
-                    style={{ backgroundColor: '#FFD700', color: '#111827' }}
-                    className="inline-block text-sm font-bold px-5 py-2 rounded-lg"
-                  >
-                    Book Now
-                  </span>
+                <Image
+                  src={b.image}
+                  alt={b.title}
+                  fill
+                  sizes="(max-width: 640px) 90vw, 560px"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0" style={{ background: b.overlay }} />
+                <div className="relative h-full flex flex-col justify-between" style={{ padding: '28px' }}>
+                  <div className="flex items-start justify-between">
+                    <p className="text-xs font-bold opacity-80">SwiftAirline</p>
+                    <span className="text-[10px] font-bold px-2 py-1 rounded-full" style={{ backgroundColor: '#FFD700', color: '#111827' }}>
+                      {b.badge}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl sm:text-3xl font-bold mb-2 leading-tight">{b.title}</h3>
+                    <p className="text-sm opacity-90 mb-4">{b.subtitle}</p>
+                    <span
+                      style={{ backgroundColor: '#FFD700', color: '#111827' }}
+                      className="inline-block text-sm font-bold px-5 py-2 rounded-lg"
+                    >
+                      Book Now
+                    </span>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -567,13 +571,18 @@ export default function Home() {
                     whileTap={{ scale: 0.97 }}
                     className="flex-shrink-0 snap-start w-44 sm:w-56 h-32 sm:h-40 rounded-2xl relative overflow-hidden text-white text-left shadow-md hover:shadow-xl transition-shadow"
                     style={{
-                      backgroundImage: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.6)), url(${d.image})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
                       outline: activeDestination === d.id ? '3px solid #2B5CE6' : 'none',
                       outlineOffset: '3px',
                     }}
                   >
+                    <Image
+                      src={d.image}
+                      alt={d.name}
+                      fill
+                      sizes="(max-width: 640px) 176px, 224px"
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.6))' }} />
                     <div className="absolute inset-0 p-4 flex flex-col justify-between">
                       <span className="self-start text-[10px] font-bold px-2 py-1 rounded-full bg-black/40 backdrop-blur-sm">
                         {d.tag}
@@ -617,14 +626,15 @@ export default function Home() {
                     onClick={() => router.push('/')}
                     className="flex-shrink-0 snap-start w-60 sm:w-72 cursor-pointer bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow"
                   >
-                    <div
-                      className="h-40 sm:h-48"
-                      style={{
-                        backgroundImage: `linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.25)), url(${s.image})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                      }}
-                    />
+                    <div className="relative h-40 sm:h-48">
+                      <Image
+                        src={s.image}
+                        alt={s.name}
+                        fill
+                        sizes="(max-width: 640px) 240px, 288px"
+                        className="object-cover"
+                      />
+                    </div>
                     <div className="p-4">
                       <p className="text-base font-semibold text-gray-900 mb-1 truncate">{s.name}</p>
                       <div className="flex items-center gap-1 text-sm text-gray-500">
@@ -670,16 +680,21 @@ export default function Home() {
                   variants={gridItem}
                   whileHover={{ scale: 1.05, y: -6 }}
                   onClick={() => router.push('/')}
-                  className="cursor-pointer rounded-xl p-5 text-white hover:shadow-xl transition-shadow flex flex-col justify-end"
-                  style={{
-                    backgroundImage: `${it.overlay}, url(${it.image})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    minHeight: '160px',
-                  }}
+                  className="cursor-pointer rounded-xl text-white hover:shadow-xl transition-shadow relative overflow-hidden flex flex-col justify-end"
+                  style={{ minHeight: '160px' }}
                 >
-                  <h3 className="font-bold mb-2">{it.title}</h3>
-                  <p className="text-xs opacity-90">{it.subtitle}</p>
+                  <Image
+                    src={it.image}
+                    alt={it.title}
+                    fill
+                    sizes="(max-width: 1024px) 45vw, 270px"
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0" style={{ background: it.overlay }} />
+                  <div className="relative p-5">
+                    <h3 className="font-bold mb-2">{it.title}</h3>
+                    <p className="text-xs opacity-90">{it.subtitle}</p>
+                  </div>
                 </motion.div>
               ))}
             </motion.div>
@@ -706,21 +721,26 @@ export default function Home() {
                   variants={gridItem}
                   whileHover={{ scale: 1.05, y: -6 }}
                   onClick={() => router.push('/')}
-                  className="cursor-pointer rounded-2xl p-5 text-white relative overflow-hidden hover:shadow-xl transition-shadow flex flex-col justify-end"
-                  style={{
-                    backgroundImage: `${r.overlay}, url(${r.image})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    minHeight: '150px',
-                  }}
+                  className="cursor-pointer rounded-2xl text-white relative overflow-hidden hover:shadow-xl transition-shadow"
+                  style={{ minHeight: '150px' }}
                 >
-                  <Plane className="absolute right-3 top-3 opacity-70" size={22} />
-                  <div className="relative flex items-center gap-2 text-lg sm:text-xl font-bold">
-                    <span>{r.from}</span>
-                    <span className="opacity-70 text-sm">→</span>
-                    <span>{r.to}</span>
+                  <Image
+                    src={r.image}
+                    alt={`${r.fromCity} to ${r.toCity}`}
+                    fill
+                    sizes="(max-width: 1024px) 45vw, 370px"
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0" style={{ background: r.overlay }} />
+                  <div className="relative p-5 h-full flex flex-col justify-end">
+                    <Plane className="absolute right-3 top-3 opacity-70" size={22} />
+                    <div className="flex items-center gap-2 text-lg sm:text-xl font-bold">
+                      <span>{r.from}</span>
+                      <span className="opacity-70 text-sm">→</span>
+                      <span>{r.to}</span>
+                    </div>
+                    <p className="text-xs opacity-90 mt-1">{r.fromCity} to {r.toCity}</p>
                   </div>
-                  <p className="relative text-xs opacity-90 mt-1">{r.fromCity} to {r.toCity}</p>
                 </motion.div>
               ))}
             </motion.div>
@@ -851,7 +871,6 @@ export default function Home() {
         </footer>
 
       </div>
-      <AppDownloadPopup />
     </div>
   );
 }
