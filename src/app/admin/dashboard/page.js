@@ -51,13 +51,16 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50">
       <div style={{ backgroundColor: '#2B5CE6' }} className="py-4 px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-white font-bold text-xl">✈ SwiftAirline Admin</h1>
+          <h1 className="text-white font-bold text-xl">✈ Admin</h1>
           <div className="flex items-center gap-4">
             <Link href="/admin/bookings/new"
               style={{ backgroundColor: '#FFD700' }}
               className="px-4 py-2 rounded-lg font-bold text-gray-900 text-sm">
               + New Booking
             </Link>
+                        <a href="/admin/settings" className="text-white opacity-70 hover:opacity-100 text-sm">
+              Settings
+            </a>
             <button onClick={logout} className="text-white opacity-70 hover:opacity-100 text-sm">
               Logout
             </button>
